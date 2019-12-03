@@ -168,6 +168,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target = target.cuda()
         input_var = torch.autograd.Variable(input)
         target_var = torch.autograd.Variable(target)
+        # compute gradient and do SGD step
+        optimizer.zero_grad()
         # compute output
         output = model(input_var)
         loss = criterion(output, target_var)
@@ -178,8 +180,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
         top1.update(prec1.detach().cpu().numpy().tolist(), input.size(0))
         top5.update(prec5.detach().cpu().numpy().tolist(), input.size(0))
 
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
