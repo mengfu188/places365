@@ -63,7 +63,7 @@ best_prec1 = 0
 def main():
     global args, best_prec1
     args = parser.parse_args()
-    print args
+    print (args)
     # create model
     print("=> creating model '{}'".format(args.arch))
     if args.arch.lower().startswith('wideresnet'):
@@ -77,7 +77,7 @@ def main():
         model.cuda()
     else:
         model = torch.nn.DataParallel(model).cuda()
-    print model
+    print( model)
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -165,7 +165,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        target = target.cuda(async=True)
+        target = target.cuda()
         input_var = torch.autograd.Variable(input)
         target_var = torch.autograd.Variable(target)
         # compute output
@@ -174,9 +174,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], input.size(0))
-        top1.update(prec1[0], input.size(0))
-        top5.update(prec5[0], input.size(0))
+        losses.update(loss.detach().cpu().numpy().tolist(), input.size(0))
+        top1.update(prec1.detach().cpu().numpy().tolist(), input.size(0))
+        top5.update(prec5.detach().cpu().numpy().tolist(), input.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -209,7 +209,7 @@ def validate(val_loader, model, criterion):
 
     end = time.time()
     for i, (input, target) in enumerate(val_loader):
-        target = target.cuda(async=True)
+        target = target.cuda()
         input_var = torch.autograd.Variable(input, volatile=True)
         target_var = torch.autograd.Variable(target, volatile=True)
 
@@ -219,9 +219,9 @@ def validate(val_loader, model, criterion):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], input.size(0))
-        top1.update(prec1[0], input.size(0))
-        top5.update(prec5[0], input.size(0))
+        losses.update(loss.detach().cpu().numpy().tolist(), input.size(0))
+        top1.update(prec1.detach().cpu().numpy().tolist(), input.size(0))
+        top5.update(prec5.detach().cpu().numpy().tolist(), input.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
