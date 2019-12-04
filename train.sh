@@ -1,0 +1,1 @@
+python -u  train_placesCNN.py /home/cmf/datasets/places365s_sub/ -b 128 | tee log
