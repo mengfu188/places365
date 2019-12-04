@@ -99,6 +99,12 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
+    dataset = datasets.ImageFolder(traindir)
+    class_to_idx = dataset.class_to_idx
+    with open('categories_places{}.txt'.format(len(class_to_idx)), 'w') as f:
+        for clazz, idx in class_to_idx.items():
+            f.write('/{}/{} {}\r\n'.format(clazz[0], clazz.replace('-', '/'), idx))
+
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
             transforms.RandomSizedCrop(224),
