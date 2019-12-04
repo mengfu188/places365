@@ -17,6 +17,7 @@ def load_labels():
     # prepare all the labels
     # scene category relevant
     file_name_category = 'categories_places365.txt'
+    file_name_category = 'categories_places33.txt'
     if not os.access(file_name_category, os.W_OK):
         synset_url = 'https://raw.githubusercontent.com/csailvision/places365/master/categories_places365.txt'
         os.system('wget ' + synset_url)
@@ -86,6 +87,8 @@ def load_model():
     # this model has a last conv feature map as 14x14
 
     model_file = 'wideresnet18_places365.pth.tar'
+    model_file = 'resnet18_latest.pth.tar'
+
     if not os.access(model_file, os.W_OK):
         os.system('wget http://places2.csail.mit.edu/models_places365/' + model_file)
         os.system('wget https://raw.githubusercontent.com/csailvision/places365/master/wideresnet.py')
@@ -134,8 +137,10 @@ weight_softmax[weight_softmax<0] = 0
 water = np.zeros((224, 224, 3), dtype=np.uint8)
 water_heatmap = np.zeros((224, 224, 3), dtype=np.uint8)
 
+top = []
+
 def forward(img, input_img):
-    global water, water_heatmap
+    global water, water_heatmap, top
     # input_img = img
 
     features_blobs.clear()
@@ -161,7 +166,10 @@ def forward(img, input_img):
     idi = 0
     flag = False
 
+    top = []
+
     for i in range(0, 5):
+        top .append( '{:.3f} -> {}'.format(probs[i], classes[idx[i]]))
         print('{:.3f} -> {}'.format(probs[i], classes[idx[i]]))
         if classes[idx[i]].find('water') != -1 or classes[idx[i]].find('fountain') != -1:
             idi = i
@@ -171,6 +179,8 @@ def forward(img, input_img):
             water = img
             # cv2.imshow('water', img)
             # cv2.waitKey()
+
+
 
     # output the scene attributes
     responses_attribute = W_attribute.dot(features_blobs[1])
@@ -191,14 +201,14 @@ def forward(img, input_img):
         water_heatmap = result
     return result
 
-cap = cv2.VideoCapture('/home/cmf/datasets/积水/2.MP4')
+cap = cv2.VideoCapture('/home/cmf/datasets/积水/1.MP4')
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 fps = cap.get(cv2.CAP_PROP_FPS)
 size = (int(448),
         int(448))
 
-out = cv2.VideoWriter('/home/cmf/datasets/积水/2_water.mp4', fourcc, fps, size)
+out = cv2.VideoWriter('/home/cmf/datasets/积水/1_water.mp4', fourcc, fps, size)
 
 
 
@@ -223,6 +233,10 @@ while True:
     img = img.float().cuda()
 
     result = forward(raw, img)
+
+    for i, t in enumerate(top):
+
+        raw = cv2.putText(raw, t, (20, (i+1)*20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
     cv2.imshow('raw', raw)
     cv2.imshow('cam', result)
